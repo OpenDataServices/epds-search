@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %} | Map search{% endblock %}
+
+{% load static %}
+
+{% block content %}
+<script>
+$(document).ready(function(){
+  window.addEventListener("message", function(msg){
+    $("iframe").css("height", msg.data.heightRequest + 100);
+  });
+});
+</script>
+<div class="container mt-4">
+    <iframe style="width: 100%; height: 100px" frameborder="0" src="{% static 'map/index.html' %}?{{request.META.QUERY_STRING}}"></iframe>
+</div>
+{% endblock %}

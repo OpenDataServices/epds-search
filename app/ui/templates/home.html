@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %} | Home{% endblock %}
+{% block content %}
+  <main role="main">
+    <div class="jumbotron bg-light">
+      <div class="container text-center bg-header-icon">
+        <h1 class="display-3"><a href="/">EPDS Search</a></h1>
+        <p class="text-muted">EPDS Search collects planning application alerts that are near to nature reserves and SSIs</p>
+        <form method="GET" action="{% url 'ui:search' %}" >
+            <div class="input-group">
+              <input type="text" name="search" class="form-control form-control-lg" placeholder="Search for places and application details e.g. Demolish outbuildings" />
+              <div class="input-group-append">
+                <input type="submit" class="btn btn-primary btn-lg" value="Search" />
+              </div>
+            </div>
+            <p class="small mt-2"><a href="{% url 'ui:search' %}">Browse all applications</a></p>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+{% endblock %}

@@ -1,0 +1,59 @@
+:root {
+    --primary:#438340;
+    --secondary: #3d553b;
+}
+
+
+body {
+    font-family: "Open Sans";
+    background-color: #F8F9FA;
+}
+
+h1, a {
+    color: var(--primary);
+}
+
+h1, h2, h3 {
+    font-weight: bold !important;
+}
+
+a:hover {
+    color: var(--secondary);
+}
+
+.list-group-item, .border, .form-control {
+    border: 1px solid #C5CCD4;
+}
+
+.jumbotron, footer, .bg-light {
+    background-color: #F1F6FC !important;
+}
+
+.btn-primary, .badge-secondary {
+    color: white;
+    background: var(--primary);
+}
+
+.btn-primary:hover, .badge-secondary:hover {
+    background-color: var(--primary);
+}
+
+.btn-secondary {
+    background-color: unset;
+    color: var(--secondary);
+}
+
+.btn-secondary:hover {
+    background-color: unset;
+    color: #027BEF;
+}
+
+.text-muted {
+    color: #80858B;
+}
+
+.bg-header-icon {
+    background-repeat: no-repeat;
+    background-position-x: right;
+    background-size: 100px;
+}

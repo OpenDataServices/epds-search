@@ -1,0 +1,664 @@
+{% extends "base.html" %}
+{% block content %}
+
+<main role="main">
+  <div id="search-app">
+    <search></search>
+  </div>
+</main>
+
+<footer class="text-muted">
+  <div class="container">
+    <p class="float-right">
+      <a href="#">Back to top</a>
+    </p>
+  </div>
+</footer>
+
+{# The rest of this is VueJs #}
+
+{% verbatim %}
+<script type="text/x-template" id="search">
+<div>
+    <section class="jumbotron text-center bg-light">
+      <div class="container bg-header-icon">
+        <h1 class="display-3"><a href="/">EPDS Search</a></h1>
+        <p class="lead text-muted">Search for planning applications near nature reserves and SSSI</p>
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+          <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Regular</a>
+          </li>
+          <li class="nav-item" role="presentation">
+            <a class="nav-link" id="advanced-filter-tab" data-toggle="tab" href="#advanced-filter" role="tab" aria-controls="advanced-filter" aria-selected="false">Advanced</a>
+          </li>
+        </ul>
+
+        <div class="tab-content mb-3">
+
+          <div class="tab-pane show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+            <div class="card card-body text-left border-top-0 rounded-0" >
+
+              <div class="input-group">
+                <input type="text" name="search" v-model="queryObj.search" class="form-control" placeholder="Search" v-on:keyup.enter="query" />
+                <div class="input-group-append">
+                  <button name="search-btn" class="btn btn-primary" v-on:click.prevent="query">Search</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        <!-- advanced filter -->
+        <div class="tab-pane" id="advanced-filter" role="tabpanel" aria-labelledby="advanced-filter-tab">
+          <div class="card card-body text-left border-top-0">
+
+            <h5>Special search terms</h5>
+            <p>Specific fields can be searched using text search "field.name<strong>:</strong>search terms". For example "<a href="" v-on:click.prevent="queryObj.search = 'description:example'; query();">description:example</a>". Available fields are: <code>description</code> and <code>area_name</code> </p>
+
+            <div class="form-row">
+              <div class="form-group col">
+                <input type="text" name="search" v-model="queryObj.search" class="form-control" placeholder="Search" v-on:keyup.enter="query" />
+              </div>
+              <div class="col-md-1">
+                <!-- TODO add multiple searches? -->
+              </div>
+            </div>
+
+            <h5>Filter fields</h5>
+            <p>The search results can be further filtered by adding exact matches</p>
+
+            <advanced-filter v-for="filter in advancedFilters" v-bind:filterId="filter.id" v-bind:queryObj="queryObj" v-bind:key="filter.id" v-on:rm-advanced-filter="removeAdvancedFilter" v-on:filter-updated="updateAdvancedFilter"></advanced-filter>
+
+            <div class="form-row">
+              <div class="form-group ml-auto">
+                <button type="button" class="btn btn-secondary text-monospace" v-on:click.prevent="addAdvancedFilter">+</button>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-2">
+                <button name="search-btn" class="btn btn-primary" v-on:click.prevent="query">Search</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <!-- end advanced filter -->
+
+      </div> <!-- end tab content -->
+
+      <div>
+        <template v-for="(item, key, i) in queryObj">
+          <template v-if="Array.isArray(item) && key && key != 'facet_size_all'">
+            <!-- we are going to assume arrays are advanced filters for now -->
+            <span class="badge badge-dark mr-1" v-for="advancedItemValue in item">{{key|underscoresToSpace}} : {{advancedItemValue|decodeURI|underscoresToSpace}} <a class="text-reset pl-2 font-weight-bold" href="#" v-on:click.prevent="removeAdvancedFilterByKeyValue(key, advancedItemValue)">&times;</a></span>
+          </template>
+          <template v-else>
+            <span class="badge badge-secondary mr-1" v-if="key != 'facet_size_all' && key.indexOf('range') < 0" >{{key|underscoresToSpace}} : {{item|decodeURI|underscoresToSpace}} <a class="text-reset pl-2 font-weight-bold" href="#" v-on:click.prevent="removeFromQuery(key)">&times;</a></span>
+            <span class="badge badge-secondary mr-1" v-if="key.indexOf('range') > 0" >{{key|underscoresToSpace}} : {{item|decodeURI|dateString('range')}} <a class="text-reset pl-2 font-weight-bold" href="#" v-on:click.prevent="removeFromQuery(key)">&times;</a></span>
+          </template>
+
+        </template>
+      </div>
+    </div> <!-- end container-->
+  </section>
+
+    <section>
+      <div class="m-4 row">
+          <!-- facets / aggregates -->
+          <div v-if="totalResults" class="col-2 mt-2">
+          <h3>Filters</h3>
+            <div class="d-flex flex-column rounded">
+
+              <h5>Near</h5>
+              <ul class="list-group">
+                <li class="list-group-item overflow-hidden" v-for="near in facets._filter_near.near.buckets">
+                  <a href="" v-on:click.prevent="queryObj.near = near.key; query();"> {{near.key|capitalise|underscoresToSpace}} ({{near.doc_count}})</a>
+                </li>
+                <li v-if="facets._filter_near.near.buckets.length == 50" class="list-group-item"><a href="" v-on:click.prevent="updateFacetSize('near');">Show all</a></li>
+              </ul>
+
+              <h5>Geographical Areas</h5>
+              <ul class="list-group">
+                <li class="list-group-item overflow-hidden" v-for="area_name in facets._filter_area_name.area_name.buckets"><a href="#" v-on:click.prevent="queryObj.area_name = area_name.key; query();"> {{area_name.key}} ({{area_name.doc_count}})</a></li>
+                <li v-if="facets._filter_area_name.area_name.buckets.length == 10" class="list-group-item"><a href="" v-on:click.prevent="updateFacetSize('area_name');">Show all</a></li>
+              </ul>
+
+              <hr />
+
+              <h5>Application Type</h5>
+              <ul class="list-group">
+                <li class="list-group-item overflow-hidden" v-for="app_type in facets._filter_app_type.app_type.buckets">
+                  <a href="" v-on:click.prevent="queryObj.app_type = app_type.key; query();"> {{app_type.key|capitalise|underscoresToSpace}} ({{app_type.doc_count}})</a>
+                </li>
+                <li v-if="facets._filter_app_type.app_type.buckets.length == 50" class="list-group-item"><a href="" v-on:click.prevent="updateFacetSize('app_type');">Show all</a></li>
+              </ul>
+
+              <hr />
+
+              <h5>Received Date</h5>
+              <ul class="list-group">
+                <li class="list-group-item" v-for="date_received in facets._filter_date_received.date_received.buckets">
+                  <a href="" v-on:click.prevent="queryObj.date_received__range = date_received.key + '__' + (date_received.key + 31557599999); query();"> {{date_received.key|dateString('yyyy')}} ({{date_received.doc_count}})</a>
+                </li>
+                <li class="list-group-item" v-if="facets._filter_date_received.date_received.buckets.length == 10"><a href="" v-on:click.prevent="updateFacetSize('date_received');">Show all</a></li>
+              </ul>
+
+              <hr />
+
+              <h5>Decision</h5>
+              <ul class="list-group">
+                <li class="list-group-item" v-for="decision in facets._filter_decision.decision.buckets">
+                  <a href="" v-on:click.prevent="queryObj.decision = decision; query();"> {{decision.key}} ({{decision.doc_count}})</a>
+                </li>
+                <li class="list-group-item" v-if="facets._filter_decision.decision.buckets.length == 10"><a href="" v-on:click.prevent="updateFacetSize('decision');">Show all</a></li>
+              </ul>
+
+            </div>
+
+          </div>
+          <!-- end facets / aggregates -->
+
+          <!-- results -->
+          <div class="col">
+
+            <div class="d-flex flex-column">
+              <div class="row justify-content-between">
+                <div class="col pl-0">
+                  <h3>Results</h3>
+                </div>
+                <div class="col pr-0">
+                  <!-- TODO Sorted by: selector -->
+                  <p class="text-right">Sorted by relevance</p>
+                </div>
+              </div>
+
+              <div class="row">
+                <p v-if="results.length">Total of {{totalResults}} results</p>
+                <p v-else>No results</p>
+
+                <p class="ml-auto">Download (<a v-bind:href="currentCsvUrl">CSV</a>, <a v-bind:href="currentApiUrl">JSON API</a>)</p>
+              </div>
+
+              <declaration-result v-for="result in results" v-bind:result="result" v-bind:key="result.id"></declaration-result>
+
+              <div class="row">
+                <button v-if="nextPage" class="btn btn-secondary" v-on:click="queryObj.page = nextPage; query(true);" >More results</button>
+              </div>
+
+            </div>
+          </div>
+      </div>
+      </section>
+    </div>
+</script>
+
+<script type="text/x-template" id="declaration-result-template">
+  <div class="row mb-3 p-3 border bg-white rounded">
+    <div class="d-flex flex-row w-100">
+      <div class="d-flex flex-column w-100">
+        <div class="row mb-4">
+          <div class="col">
+            <h4><strong>{{result.near}} in {{result.area_name}}</strong> </h4>
+          </div>
+       </div>
+
+        <div class="row">
+          <div class="col">
+            <p class="lead font-weight-bold">Area Name: {{result.area_name}}</p>
+          </div>
+
+          <div class="col">
+            <p class="mb-0"><strong>Decision:</strong><template v-if="!result.decision"> Unknown </template><template v-else> {{result.decision}}</template></p>
+          </div>
+
+          <div class="col">
+            <p class="mb-0" ><strong>Application Type:</strong> {{result.app_type}}</p>
+          </div>
+
+
+
+        </div>
+
+        <p class="mb-0" v-if="result.date_received"><strong>Date Received:</strong>
+            {{result.date_received|dateString}}
+        </p>
+
+        <p class="mt-2"><strong>Description:</strong></p>
+        <p class="lead">{{result.description}}</p>
+
+        <p><a v-bind:href="mapUrl+`?lat=${result.location_y}&lng=${result.location_x}`" target="_blank">View location on a map</a></p>
+
+      </div>
+    </div>
+  </div>
+</script>
+
+
+<script type="text/x-template" id="advanced-filter-template">
+  <div class="form-row">
+    <div class="form-group col-md-2">
+        <select class="form-control" v-model="field">
+          <option disabled value="">Select field...</option>
+          <!-- api/views.py filter_fields -->
+          <option value="description">Description</option>
+          <option value="decision">Decision</option>
+          <option value="area_name">Geographical area</option>
+          <option value="near">Near to</option>
+          <option value="app_type">Application type</option>
+          <option value="date_received">Date received</option>
+        </select>
+    </div>
+
+    <div class="form-group col-md-2">
+        <select class="form-control" v-model="filter">
+          <option disabled value="">Select filter type...</option>
+          <!-- https://django-elasticsearch-dsl-drf.readthedocs.io/en/latest/filtering_usage_examples.html  -->
+          <template v-if="field.indexOf('_date') < 0">
+            <option value="contains">Contains exactly</option>
+            <option value="startswith">Starts with exactly</option>
+            <option value="endswith">Ends with exactly</option>
+          </template>
+          <template v-else>
+            <option value="range" selected>Range</option>
+          </template>
+        </select>
+    </div>
+
+    <div class="form-group col" v-if="field.indexOf('_date') < 0">
+        <input type="text" class="form-control" v-model="value" placeholder="text" />
+    </div>
+
+    <template v-if="field.indexOf('_date') > 0">
+      <div class="form-group col">
+        <input type="date" v-model="dateFrom" class="form-control" />
+      </div>
+      <div class="form-group col">
+        <input type="date" v-model="dateTo" class="form-control" />
+      </div>
+    </template>
+
+    <div class="form-group col-md-1 mb-5">
+      <button type="button" class="btn btn-secondary position-absolute text-monospace" style="right: 0" v-on:keyup.prevent="" v-on:click.prevent="$emit('rm-advanced-filter', filterId)">-</button>
+    </div>
+  </div>
+
+</script>
+
+{% endverbatim %}
+
+<script>
+
+var apiUrl = "{% url "api:planning-apps-list" %}";
+var csvUrl = "{% url "ui:csv-download" %}";
+var mapUrl = "{% url "ui:map-search" %}";
+
+</script>
+
+<script>
+  Vue.component('declaration-result', {
+    template: '#declaration-result-template',
+    props: {
+      result: { type: Object },
+    },
+
+    data: function(){
+      return {
+        mapUrl: mapUrl,
+      }
+    }
+  });
+
+  Vue.component('search', {
+    template: '#search',
+
+    data: function(){
+      return {
+        results: [],
+        facets: {},
+        totalResults: 0,
+        resultsStart: 0,
+        resultsEnd: 0,
+        nextPage: undefined,
+        delayedQueryTimer: undefined,
+        queryObj: {},
+        currentApiUrl: undefined,
+        currentCsvUrl: undefined,
+        advancedFilters: [],
+      }
+    },
+
+    watch: {
+      "queryObj.search": 'delayedQuery',
+    },
+
+    created: function () {
+        let ctx = this;
+        /* Take the search query from the url query param if it
+         * exists */
+        window.onpopstate = function(event) {
+          if (event.state && event.state.queryObj) {
+            ctx.queryObj = event.state.queryObj;
+            ctx.query(true);
+          }
+        }
+
+        /* Load the search from url query*/
+        if (window.location.search){
+          let urlObj = this.urlQueryToObj(window.location.search);
+          this.queryObj = urlObj;
+
+          /* Update facet size separately to ensure we have an array */
+          this.queryObj.facet_size_all = null;
+          this.updateFacetSize(urlObj.facet_size_all);
+        }
+
+        this.addAdvancedFilter();
+
+        this.query(true);
+    },
+
+    methods: {
+
+      reset: function(){
+        this.total_results = 0;
+        this.results = [];
+        this.nextPage = null;
+        this.facets = {};
+      },
+
+      urlQueryToObj: function(url){
+        /* Turns a GET query into an object */
+        var string = url.split("?")[1];
+
+        var stringArray = string.split("&");
+        var obj = {};
+
+        for (var i in stringArray) {
+          var keyVal = stringArray[i].split("=");
+          if (keyVal[1]){
+            obj[keyVal[0]] = keyVal[1];
+          }
+        }
+        return obj;
+      },
+
+      objToUrlQuery: function (obj){
+        /* Turns an object into GET query */
+        var str = "?";
+
+        for (var key in obj){
+          if (!obj[key])
+            continue;
+
+          /* Unpack arrays */
+          if (Array.isArray(obj[key])){
+            for(var i in obj[key]){
+              str += key + "=" + obj[key][i] + "&";
+            }
+            continue;
+          }
+
+          str += key+ "="+obj[key].toString();
+          str += "&";
+        }
+
+        /* Maintain the current hash */
+        str += window.location.hash;
+        return str;
+      },
+
+      removeFromQuery: function(key){
+        delete this.queryObj[key];
+        this.query();
+      },
+
+      updateFacetSize: function(facet){
+        if (!facet){
+          return;
+        }
+
+        if (!this.queryObj.facet_size_all){
+          this.queryObj.facet_size_all = [ facet ];
+        } else {
+          this.queryObj.facet_size_all.push(facet);
+        }
+
+        this.query();
+      },
+
+      updateAdvancedFilter: function(advancedFilter){
+        /* Find it and update it */
+        console.log(advancedFilter);
+        for (filterI in this.advancedFilters){
+          let filterObj = this.advancedFilters[filterI];
+
+          if (filterObj.id == advancedFilter.id){
+            filterObj.value = advancedFilter.value;
+            filterObj.key = advancedFilter.key;
+            break;
+          }
+        }
+      },
+
+      updateAdvancedFiltersInQueryObj: function(){
+        /* Remove any old filters from the queryObj */
+        for (filterI in this.advancedFilters){
+          delete this.queryObj[this.advancedFilters[filterI].key];
+        }
+
+        /* And now add the new ones in */
+        for (filterI in this.advancedFilters){
+          let filterObj = this.advancedFilters[filterI];
+
+          if (!filterObj.key || !filterObj.value){
+            continue;
+          }
+
+          /* Initialise the array for this key if needed
+          *  Filters are always arrays as they are infinitely chain-able
+          */
+          if (!this.queryObj[filterObj.key]){
+            this.queryObj[filterObj.key] = [];
+          }
+
+          this.queryObj[filterObj.key].push(filterObj.value);
+        }
+
+      },
+
+      addAdvancedFilter: function(){
+        /* We use the epoch here to generate filter id as there is nothing else
+         * that can uniquely identify the filter (all the content can be the same as
+         * they're chain-able)
+        */
+        this.advancedFilters.push({ id: 'filter-'+Date.now(), value: '', key:''})
+      },
+
+      removeAdvancedFilter: function(filterId){
+        /* Find and Remove from our list of filters by filter id */
+        for (filterI in this.advancedFilters){
+          let filterObj = this.advancedFilters[filterI];
+
+          if (filterObj.id == filterId){
+            delete this.queryObj[filterObj.key];
+            this.advancedFilters.splice(filterI, 1);
+            break;
+          }
+
+        }
+
+        this.query();
+      },
+
+      removeAdvancedFilterByKeyValue: function(key, value){
+        for (filterI in this.advancedFilters){
+          let filterObj = this.advancedFilters[filterI];
+          if (filterObj.key == key && filterObj.value == value){
+            this.removeAdvancedFilter(filterObj.id);
+          }
+        }
+      },
+
+      delayedQuery: function(){
+        if (this.delayedQueryTimer){
+          window.clearTimeout(this.delayedQueryTimer);
+        }
+
+        this.reset();
+
+        let ctx = this;
+
+        this.delayedQueryTimer = window.setTimeout(function(){
+          ctx.query();
+        }, 1000);
+      },
+
+      query: function(paging){
+        let ctx = this;
+        let url;
+        let queryParams;
+
+        /* Any other change in the query we need to start again from page 0 */
+        if (!paging){
+          delete this.queryObj['page'];
+          this.nextPage = undefined;
+        }
+
+        /* Avoid double querying  - once from typing , once from enter/click search */
+        if (this.delayedQueryTimer){
+          window.clearTimeout(this.delayedQueryTimer);
+        }
+
+        /* See if we need to update any Advanced Filters we may have */
+        this.updateAdvancedFiltersInQueryObj();
+
+        /* Save the state in browser history */
+        window.history.pushState({ queryObj: this.queryObj }, "q", this.objToUrlQuery(this.queryObj));
+
+        console.log(this.queryObj);
+
+        /* Create the url for this query */
+        queryParams = this.objToUrlQuery(this.queryObj);
+        this.currentApiUrl = apiUrl + queryParams;
+        this.currentCsvUrl = csvUrl + queryParams;
+
+        /* Do the API request */
+        $.getJSON(this.currentApiUrl, function(data){
+          ctx.results = data.results;
+          ctx.totalResults = data.count;
+
+          if (ctx.queryObj.search){
+            ctx.queryObj.search = decodeURI(ctx.queryObj.search);
+          }
+
+          ctx.facets = data.facets;
+          if (data.next){
+            /* extract the next page number for future use. We want the
+             * queryObj to the be ssot on the query state
+             */
+            ctx.nextPage = ctx.urlQueryToObj(data.next).page
+          }
+          if (ctx.totalResults === 0){
+            ctx.results = [];
+          }
+
+        });
+      },
+    }
+  });
+
+  Vue.component('advanced-filter', {
+    template: '#advanced-filter-template',
+    props: {
+      queryObj: { type: Object },
+      filterId: { type: String },
+    },
+
+    data: function(){
+      return {
+        field: "",
+        filter: "",
+        value: "",
+        dateTo: undefined,
+        dateFrom: undefined,
+     }
+    },
+
+    watch: {
+      "field": 'updateObj',
+      "filter":'updateObj',
+      "value": 'updateObj',
+      "dateTo": 'updateObj',
+      "dateFrom": 'updateObj',
+    },
+
+    methods: {
+      updateObj: function(){
+        if (!this.field || !this.filter || (!this.value && !(this.dateFrom && this.dateTo))){
+          return;
+        }
+
+        /* We only deal with date ranges at the moment */
+        if (this.filter == 'range') {
+          this.value = this.dateFrom + "__" + this.dateTo;
+        }
+
+        let newFilter = {
+          id: this.filterId,
+          key: this.field + "__" + this.filter,
+          value: this.value,
+        };
+
+       this.$emit("filter-updated", newFilter);
+      },
+    }
+  });
+
+  Vue.filter('decodeURI', function (val) {
+      return decodeURI(val);
+  });
+
+  Vue.filter('capitalise', function (value) {
+      if (!value) return ''
+      value = value.toString()
+      return value.charAt(0).toUpperCase() + value.slice(1)
+  });
+
+  Vue.filter('underscoresToSpace', function (value) {
+    return value.replace(/_/g, " ")
+  });
+
+  Vue.filter('dateString', function (value, format) {
+    if (!value){
+      return "";
+    }
+    /* NB if this gets big lets use one of many many libraries that do this for us */
+    if (format == "range"){
+      let dates = value.split("__");
+
+      dateFrom = new Date(Number(dates[0]));
+      dateTo = new Date(Number(dates[1]));
+
+      return dateFrom.getFullYear() + " - " + dateTo.getFullYear();
+    }
+
+    let date = new Date(value);
+
+    switch(format){
+     case 'yyyy':
+        return date.getFullYear();
+        break;
+
+      default:
+        return date.getDate() + "/" + (date.getMonth()+1) + "/" + date.getFullYear();
+        break;
+    }
+  });
+
+  new Vue({
+    el: "#search-app",
+  });
+</script>
+
+{% endblock %}
