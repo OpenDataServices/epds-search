@@ -9,8 +9,8 @@ $ setup.sh
 ```
  dokku apps:create epds-search
  dokku config:set epds-search ALLOWED_HOSTS=<hostname>
- dokku plugin:install https://github.com/dokku/dokku*elasticsearch.git elasticsearch
- dokku plugin:install https://github.com/dokku/dokku*postgres.git postgres
+ dokku plugin:install https://github.com/dokku/dokku-elasticsearch.git elasticsearch
+ dokku plugin:install https://github.com/dokku/dokku-postgres.git postgres
  dokku postgres:create epdssearch_db
  dokku postgres:link epdssearch_db epds-search
  dokku elasticsearch:create epdssearch_idx
