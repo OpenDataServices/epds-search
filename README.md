@@ -1,5 +1,7 @@
 # Install dependencies in a python virtualenv
 
+This application requires a database (any supported by django) and an elasticsearch instance.
+
 ```
 $ setup.sh
 ```
@@ -21,9 +23,8 @@ $ setup.sh
  dokku run epds-search ./app/manage.py load_data postgresql://<user>:<pass>@<host>/epds
 
  # collect static files for project
+ mkdir /home/dokku/epds-search/static
  dokku run epds-search ./app/manage.py collectstatic -v 3 --noinput
- # mount the django static files directory
- dokku docker-options:add epds-search deploy "-v /home/dokku/epds-search/static:/app/app/static/"
 
  # Setup nginx to serve up static files
  mkdir /home/dokku/epds-search/nginx.conf.d/
