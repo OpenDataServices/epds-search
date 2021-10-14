@@ -13,23 +13,29 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import environ
 import os
 
+from django.utils.crypto import get_random_string
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)'
+random_secret_key = get_random_string(50, chars)
+
 env = environ.Env(
     # set casting, default value
-    DEBUG=(bool, True),
+    DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, []),
     ES_HOST=(str, "localhost:9200"),
     STATIC_ROOT=(str, os.path.join(BASE_DIR, "static")),
     ES_DISABLE=(bool, False),
+    SECRET_KEY=(str, random_secret_key)
 )
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "aot2oHei5are3vaezii2saovip0mie7pho2oosiR"
+SECRET_KEY = env("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env("DEBUG")
