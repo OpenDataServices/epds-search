@@ -14,7 +14,9 @@ class Dataset(models.Model):
 
 
 class PlaningApp(models.Model):
-    dataset = models.ForeignKey(Dataset, on_delete=models.CASCADE, null=True, blank=True)
+    dataset = models.ForeignKey(
+        Dataset, on_delete=models.CASCADE, null=True, blank=True
+    )
     area_name = models.TextField(null=True)
     description = models.TextField(null=True)
     location_x = models.FloatField(null=True)

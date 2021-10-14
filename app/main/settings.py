@@ -18,7 +18,7 @@ from django.utils.crypto import get_random_string
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)'
+chars = "abcdefghijklmnopqrstuvwxyz0123456789!@#%^&*(-_=+)"
 random_secret_key = get_random_string(50, chars)
 
 env = environ.Env(
@@ -28,7 +28,7 @@ env = environ.Env(
     ES_HOST=(str, "localhost:9200"),
     STATIC_ROOT=(str, os.path.join(BASE_DIR, "static")),
     ES_DISABLE=(bool, False),
-    SECRET_KEY=(str, random_secret_key)
+    SECRET_KEY=(str, random_secret_key),
 )
 
 # Quick-start development settings - unsuitable for production
@@ -110,9 +110,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
 ]
 
 
@@ -141,8 +147,15 @@ STATIC_ROOT = env("STATIC_ROOT")
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler",},},
-    "root": {"handlers": ["console"], "level": "WARNING",},
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
 }
 
 
@@ -175,7 +188,7 @@ ELASTICSEARCH_INDEX_NAMES = {
 # Fields to include in the user csv  data dump
 CSV_USER_DUMP_FIELDS = [
     "description",
-   # TODO
+    # TODO
 ]
 
 # Where to dump the user csv data dump

@@ -8,30 +8,53 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Dataset',
+            name="Dataset",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('datetime', models.DateTimeField(auto_now=True)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("datetime", models.DateTimeField(auto_now=True)),
             ],
         ),
         migrations.CreateModel(
-            name='PlaningApp',
+            name="PlaningApp",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('area_name', models.TextField(null=True)),
-                ('description', models.TextField(null=True)),
-                ('location_x', models.FloatField(null=True)),
-                ('location_y', models.FloatField(null=True)),
-                ('near', models.TextField(null=True)),
-                ('decision', models.TextField(default='Unknown', null=True)),
-                ('app_type', models.TextField(null=True)),
-                ('date_received', models.DateField(null=True)),
-                ('dataset', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='db.Dataset')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("area_name", models.TextField(null=True)),
+                ("description", models.TextField(null=True)),
+                ("location_x", models.FloatField(null=True)),
+                ("location_y", models.FloatField(null=True)),
+                ("near", models.TextField(null=True)),
+                ("decision", models.TextField(default="Unknown", null=True)),
+                ("app_type", models.TextField(null=True)),
+                ("date_received", models.DateField(null=True)),
+                (
+                    "dataset",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="db.Dataset",
+                    ),
+                ),
             ],
         ),
     ]

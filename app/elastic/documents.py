@@ -19,7 +19,7 @@ else:
 
 @decorator
 class PlanningAppDocument(Document):
-    """ Declaration ElasticSearch doc """
+    """Declaration ElasticSearch doc"""
 
     # For CSV export keep these field names in sync with db/models
 

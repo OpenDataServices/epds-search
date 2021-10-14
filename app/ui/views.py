@@ -11,17 +11,17 @@ from django.conf import settings
 
 
 class CSVFromQueryDownloadView(View):
-    """ Takes the current search query and turns it into a CSV """
+    """Takes the current search query and turns it into a CSV"""
 
     csv_keys = settings.CSV_USER_DUMP_FIELDS
 
     # Taken from ThreeSixtyGiving/grantnav/views.py AGPLv3
     @staticmethod
     def get_data_from_path(path, data):
-        """ Recursive into a dictionary to get the values from a key path
+        """Recursive into a dictionary to get the values from a key path
 
-            path: path in the format ab.cd.ef to get value from dict[ab][cd][ef]
-            data: dictionary of data
+        path: path in the format ab.cd.ef to get value from dict[ab][cd][ef]
+        data: dictionary of data
         """
         current_pos = data
         for part in path.split("."):

@@ -21,7 +21,7 @@ class Command(BaseCommand):
         pkf_fields = " pkf.area_name, pkf.description, pkf.location_x, pkf.location_y, pkf.decision, pkf.app_type, pkf.date_received "
 
         db_result = scrape_db.query(
-            f'''
+            f"""
             (SELECT {pkf_fields}, 'RSPB Reserve' as near
             FROM planit p
             JOIN planit_load pl on p.load_id = pl.id
@@ -37,7 +37,7 @@ class Command(BaseCommand):
             JOIN planit_key_fields pkf on pkf.id = p.id
             JOIN near_ibas nr on nr.id = p.id
             )
-            '''
+            """
         )
 
         db_dataset = db.Dataset.objects.create()

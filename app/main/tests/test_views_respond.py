@@ -35,7 +35,7 @@ class UrlsTests(LiveServerTestCase):
         )
 
     def test_url_responds(self):
-        """ Basic test to make sure all urls/views return """
+        """Basic test to make sure all urls/views return"""
         for path in main_urls:
             self._test_url(path)
 

@@ -3,7 +3,7 @@ from django_elasticsearch_dsl_drf.filter_backends import FacetedSearchFilterBack
 
 class SizedFacetedSearchFilterBackend(FacetedSearchFilterBackend):
     def prepare_faceted_search_fields(self, view):
-        """ Adds a "facet_size_all" query param to standard FacetedSearchFilterBackend
+        """Adds a "facet_size_all" query param to standard FacetedSearchFilterBackend
 
         Usage: ?facet_size_all=<facet_name>&facet_size_all=<facet_name>...
 
