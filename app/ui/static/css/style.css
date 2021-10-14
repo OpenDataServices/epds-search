@@ -25,10 +25,6 @@ a:hover {
     border: 1px solid #C5CCD4;
 }
 
-.jumbotron, footer, .bg-light {
-    background-color: #F1F6FC !important;
-}
-
 .btn-primary, .badge-secondary {
     color: white;
     background: var(--primary);
@@ -45,7 +41,7 @@ a:hover {
 
 .btn-secondary:hover {
     background-color: unset;
-    color: #027BEF;
+    color: var(--secondary);
 }
 
 .text-muted {
