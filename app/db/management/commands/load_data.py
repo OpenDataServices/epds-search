@@ -10,9 +10,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "db-uri",
-            nargs=1,
-            help="The uri of the database containing scraped data",
+            "db-uri", nargs=1, help="The uri of the database containing scraped data",
         )
 
     def fetch_data(self):

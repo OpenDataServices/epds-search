@@ -60,11 +60,7 @@ class PlanningAppViewSet(DocumentViewSet):
 
     # FacetedSearchFilterBackend ?facet=name
     faceted_search_fields = {
-        "decision": {
-            "field": "decision",
-            "facet": TermsFacet,
-            "enabled": True,
-        },
+        "decision": {"field": "decision", "facet": TermsFacet, "enabled": True,},
         "area_name": {
             "field": "area_name",
             "facet": TermsFacet,
